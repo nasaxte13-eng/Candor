@@ -2,7 +2,7 @@ import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 
-# Токен прямо здесь (на free тарифе env не работает)
+# Токен прямо в коде (на бесплатном тарифе Bothost env переменные не работают)
 TOKEN = '8688223526:AAGEyn58kTxRgXhS1KHJj-c5WjT7gGQjtJ0'
 
 bot = Bot(token=TOKEN)
