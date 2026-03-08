@@ -1,4 +1,5 @@
 import asyncio
+import signal
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 
@@ -7,7 +8,7 @@ TOKEN = '8688223526:AAGEyn58kTxRgXhS1KHJj-c5WjT7gGQjtJ0'
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-ADMIN_ID = 1051261597  # твой ID — сюда приходят заявки
+ADMIN_ID = 1051261597  # твой ID
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
@@ -19,7 +20,6 @@ async def start(message: types.Message):
 
 @dp.message()
 async def forward_to_admin(message: types.Message):
-    # Если это ты сама пишешь — не пересылаем себе
     if message.from_user.id == ADMIN_ID:
         await message.answer("Это ты сама себе пишешь 😊")
         return
@@ -27,7 +27,6 @@ async def forward_to_admin(message: types.Message):
     user = message.from_user
     username = f"@{user.username}" if user.username else f"ID {user.id}"
 
-    # Пересылаем тебе
     await bot.send_message(
         ADMIN_ID,
         f"НОВАЯ ЗАЯВКА!\n"
@@ -35,13 +34,26 @@ async def forward_to_admin(message: types.Message):
         f"Сообщение:\n\n{message.text}\n\n"
         f"Ответить: t.me/{user.username if user.username else user.id}"
     )
-
-    # Ответ пользователю
+    
     await message.answer("Заявка отправлена! ✨ Натали скоро свяжется с тобой.")
 
+async def on_shutdown():
+    print("Получен SIGTERM — graceful shutdown")
+    await bot.session.close()
+    print("Сессия закрыта, бот остановлен корректно")
+
 async def main():
-    print("Бот-помощник запущен! Заявки идут в личку Натали.")
-    await dp.start_polling(bot)
+    print("Бот запущен!")
+    
+    # Запускаем polling с обработкой сигналов
+    await dp.start_polling(bot, handle_signals=True)
+
+    # Регистрируем shutdown-хук (на случай, если polling завершится)
+    asyncio.get_event_loop().add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(on_shutdown()))
+    asyncio.get_event_loop().add_signal_handler(signal.SIGINT, lambda: asyncio.create_task(on_shutdown()))
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        asyncio.run(on_shutdown())
