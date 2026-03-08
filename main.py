@@ -7,41 +7,37 @@ TOKEN = '8688223526:AAGEyn58kTxRgXhS1KHJj-c5WjT7gGQjtJ0'
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Твой ID — сюда приходят все заявки
-ADMIN_ID = 1051261597   # ← твой ID, не меняй
+ADMIN_ID = 1051261597  # твой ID — сюда приходят заявки
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
     await message.answer(
         "Привет! 👋\n"
-        "Я помощник. Напиши, что тебе нужно (заявка, вопрос, заказ), "
+        "Я помощник. Напиши, что тебе нужно (заявка, вопрос, запись и т.д.), "
         "и я сразу передам это Натали."
     )
 
 @dp.message()
-async def forward_request(message: types.Message):
-    # Если пишешь ты сама — не пересылаем себе же
+async def forward_to_admin(message: types.Message):
+    # Если это ты сама пишешь — не пересылаем себе
     if message.from_user.id == ADMIN_ID:
         await message.answer("Это ты сама себе пишешь 😊")
         return
 
     user = message.from_user
     username = f"@{user.username}" if user.username else f"ID {user.id}"
-    
-    # Пересылаем тебе сообщение + информацию
+
+    # Пересылаем тебе
     await bot.send_message(
         ADMIN_ID,
-        f"Новая заявка!\n"
+        f"НОВАЯ ЗАЯВКА!\n"
         f"От: {user.full_name} ({username})\n"
         f"Сообщение:\n\n{message.text}\n\n"
         f"Ответить: t.me/{user.username if user.username else user.id}"
     )
-    
+
     # Ответ пользователю
-    await message.answer(
-        "Заявка отправлена! ✨\n"
-        "Натали скоро с тобой свяжется."
-    )
+    await message.answer("Заявка отправлена! ✨ Натали скоро свяжется с тобой.")
 
 async def main():
     print("Бот-помощник запущен! Заявки идут в личку Натали.")
