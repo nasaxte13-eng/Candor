@@ -2,22 +2,46 @@ import asyncio
 import signal
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 TOKEN = '8688223526:AAGEyn58kTxRgXhS1KHJj-c5WjT7gGQjtJ0'
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-ADMIN_ID = 1051261597  # твой ID
+ADMIN_ID = 1051261597  # твой ID — сюда приходят все заявки
+
+# Клавиатура с кнопками
+keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Оставить заявку")],
+        [KeyboardButton(text="Написать в личку")],
+        [KeyboardButton(text="Что такое Candor Candle?")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=False
+)
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
     await message.answer(
-        "Привет! 👋\n"
-        "Я помощник. Напиши, что тебе нужно (заявка, вопрос, запись и т.д.), "
-        "и я сразу передам это Натали."
+        "Привет! 👋\n\n"
+        "Я помощник Натали. Чем могу помочь?\n\n"
+        "Нажми на кнопку ниже ✨",
+        reply_markup=keyboard
     )
 
+@dp.message(F.text == "Что такое Candor Candle?")
+async def about_candor(message: types.Message):
+    await message.answer(
+        "Каждый месяц 13-го числа мы выпускаем ровно 13 свечей с уникальным эксклюзивным ароматом. "
+        "Каждой свече присваивается свой собственный номер — это твой личный билет в Candor Community\n\n"
+        "Каждая свеча создана вручную из натуральных премиум-материалов и несёт в себе особую силу и намерение.\n"
+        "Становясь обладателем Candor Candle, ты не просто покупаешь свечу — ты становишься частью сообщества"
+    )
+
+@dp.message(F.text == "Оставить заявку")
+@dp.message(F.text == "Написать в личку")
 @dp.message()
 async def forward_to_admin(message: types.Message):
     if message.from_user.id == ADMIN_ID:
@@ -35,7 +59,13 @@ async def forward_to_admin(message: types.Message):
         f"Ответить: t.me/{user.username if user.username else user.id}"
     )
     
-    await message.answer("Заявка отправлена! ✨ Натали скоро свяжется с тобой.")
+    await message.answer(
+        "Спасибо, что написал(а) мне! ❤️\n"
+        "Я уже передала твою заявку Натали — она точно увидит и очень скоро ответит.\n\n"
+        "Обычно Натали отвечает в течение 1–2 часов, но если вдруг чуть задержится — это только потому, "
+        "что она хочет ответить максимально тепло и по-настоящему полезно 🌸\n\n"
+        "Жду тебя здесь, обнимаю 🤗✨"
+    )
 
 async def on_shutdown():
     print("Получен SIGTERM — graceful shutdown")
@@ -45,12 +75,11 @@ async def on_shutdown():
 async def main():
     print("Бот запущен!")
     
-    # Запускаем polling с обработкой сигналов
     await dp.start_polling(bot, handle_signals=True)
 
-    # Регистрируем shutdown-хук (на случай, если polling завершится)
-    asyncio.get_event_loop().add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(on_shutdown()))
-    asyncio.get_event_loop().add_signal_handler(signal.SIGINT, lambda: asyncio.create_task(on_shutdown()))
+    loop = asyncio.get_event_loop()
+    loop.add_signal_handler(signal.SIGTERM, lambda: loop.create_task(on_shutdown()))
+    loop.add_signal_handler(signal.SIGINT, lambda: loop.create_task(on_shutdown()))
 
 if __name__ == "__main__":
     try:
