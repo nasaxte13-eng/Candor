@@ -1,10 +1,13 @@
 import asyncio
 import signal
-from aiogram import Bot, Dispatcher, types
+import os
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-TOKEN = '8688223526:AAGEyn58kTxRgXhS1KHJj-c5WjT7gGQjtJ0'
+TOKEN = os.getenv("BOT_TOKEN")
+if not TOKEN:
+    raise ValueError("BOT_TOKEN не найден в переменных окружения Bothost! Добавь его в панели Env.")
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
